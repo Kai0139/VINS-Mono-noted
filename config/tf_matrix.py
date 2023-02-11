@@ -38,7 +38,7 @@ t_cam0 = [0.067436, -0.022029, -0.078333]
 
 transformation_cam0 = transformation_matrix(q_cam0, t_cam0)
 
-q_cam1 = [-0.494020, 0.500019, -0.504264, 0.501638]
+q_cam1 = [0.494020, 0.500019, -0.504264, 0.501638]
 t_cam1 = [-0.092345, -0.020508, -0.079230]
 
 transformation_cam1 = transformation_matrix(q_cam1, t_cam1)
