@@ -71,9 +71,12 @@ class IntegrationBase
     {
         //ROS_INFO("midpoint integration");
         // 首先中值积分更新状态量
+        // delta_q 代表从上一图像帧到当前imu数据的姿态变化，此处将加速度向量转化为在上一图像坐标系下
         Vector3d un_acc_0 = delta_q * (_acc_0 - linearized_ba);
+        // 两帧Imu之间的姿态变化只需要在上一帧imu的姿态的基础上乘以姿态变化量（角速度*dt），不需要坐标系变化
         Vector3d un_gyr = 0.5 * (_gyr_0 + _gyr_1) - linearized_bg;
         result_delta_q = delta_q * Quaterniond(1, un_gyr(0) * _dt / 2, un_gyr(1) * _dt / 2, un_gyr(2) * _dt / 2);
+        // 在通过角速度得到下一IMU数据的姿态后，将下一IMU数据的加速度也变化为上一帧图像坐标系下
         Vector3d un_acc_1 = result_delta_q * (_acc_1 - linearized_ba);
         Vector3d un_acc = 0.5 * (un_acc_0 + un_acc_1);
         result_delta_p = delta_p + delta_v * _dt + 0.5 * un_acc * _dt * _dt;
@@ -88,6 +91,7 @@ class IntegrationBase
             Vector3d a_1_x = _acc_1 - linearized_ba;
             Matrix3d R_w_x, R_a_0_x, R_a_1_x;
 
+            // 先构建需要的反对称矩阵
             R_w_x<<0, -w_x(2), w_x(1),
                 w_x(2), 0, -w_x(0),
                 -w_x(1), w_x(0), 0;
@@ -117,6 +121,7 @@ class IntegrationBase
             //cout<<"A"<<endl<<A<<endl;
 
             MatrixXd V = MatrixXd::Zero(15,18);
+            // 注意V矩阵中与课程中的V矩阵正负相反。对噪声的建模为高斯白噪声，V矩阵作为噪声的雅可比，所以正负并无差别
             V.block<3, 3>(0, 0) =  0.25 * delta_q.toRotationMatrix() * _dt * _dt;
             V.block<3, 3>(0, 3) =  0.25 * -result_delta_q.toRotationMatrix() * R_a_1_x  * _dt * _dt * 0.5 * _dt;
             V.block<3, 3>(0, 6) =  0.25 * result_delta_q.toRotationMatrix() * _dt * _dt;
